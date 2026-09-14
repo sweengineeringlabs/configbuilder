@@ -1,10 +1,10 @@
 # configbuilder
 
-> **TLDR:** Standalone TOML section loader for swe-edge — XDG-aware layered resolution, `{{VAR_NAME}}` substitution with pluggable name policies and value sources, and preflight validation. No runtime dependency.
+> **TLDR:** Standalone TOML section loader for any Rust application — XDG-aware layered resolution, `{{VAR_NAME}}` substitution with pluggable name policies and value sources, and preflight validation. No runtime dependency.
 
-Standalone, runtime-independent TOML section loader for swe-edge services. Provides
+Standalone, runtime-independent TOML section loader for any Rust application. Provides
 XDG-aware, layered config section loading for any `T: DeserializeOwned + Default`. Library
-crates can depend on this crate directly without pulling in `swe-edge-runtime-main`.
+crates can depend on this crate directly without pulling in any application runtime.
 
 The crate lives under [`scm/`](scm/) (the formalized SEA package layout). Full usage
 examples, the feature list, and the API surface are documented there — this page is
