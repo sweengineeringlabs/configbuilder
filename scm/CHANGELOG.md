@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.1] - 2026-10-27
+
+### Changed
+
+- Upgrade `dirs` from 5 to 7 to remove the older `dirs-sys` and `windows-sys`
+  dependency line from downstream applications. The config lookup API and
+  supported Rust version remain unchanged.
+
 ## [0.8.0] - 2026-08-22
 
 ### Changed
