@@ -2,11 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- A file named with `with_config_file` that does not exist is `ConfigError::Io`, no longer `ConfigError::NotFound` (issue #25). `NotFound` is for a section that is in no source, which a library that loads one section may read as nothing configured and answer with its defaults; a missing file the caller named is the caller's mistake and must not be answered that way.
+
 ### Added
 
 - `ConfigBuilder::with_config_file(file)` — appends one explicit config file, of any name, to the sources of the loader (issue #23). Files are read after every
   directory, in the order added, so they override the directories and the earlier files; they are read with the same limits (size, timeout, substitution). Unlike a
-  directory, a file named this way must exist: the loader reports `ConfigError::NotFound` when it does not, and building the loader fails with `ConfigError::Io`
+  directory, a file named this way must exist: the loader reports `ConfigError::Io` when it does not, and building the loader fails with `ConfigError::Io`
   when the path is a directory. Use it for a source whose name is not the loader's `config_filename`, such as a path an operator gives in an environment variable.
 
 ### Changed
