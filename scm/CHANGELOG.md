@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- `ConfigBuilder::with_config_file(file)` — appends one explicit config file, of any name, to the sources of the loader (issue #23). Files are read after every
+  directory, in the order added, so they override the directories and the earlier files; they are read with the same limits (size, timeout, substitution). Unlike a
+  directory, a file named this way must exist: the loader reports `ConfigError::NotFound` when it does not, and building the loader fails with `ConfigError::Io`
+  when the path is a directory. Use it for a source whose name is not the loader's `config_filename`, such as a path an operator gives in an environment variable.
+
+### Changed
+
+- **Breaking for implementors:** `ConfigBuilder` has a new required method, `with_config_file`. Code that only calls the builders of this crate is not affected.
+- The message of `ConfigError::NotFound` for a section that is in no source now says "in any configured directory or file".
+
 ## [0.8.1] - 2026-10-27
 
 ### Changed

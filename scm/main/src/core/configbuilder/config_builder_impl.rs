@@ -12,6 +12,7 @@ impl ConfigBuilderImpl {
             config_dirs: Vec::new(),
             read_timeout: None,
             config_filename: None,
+            config_files: Vec::new(),
         }
     }
 
@@ -43,6 +44,12 @@ impl ConfigBuilderImpl {
         self
     }
 
+    /// Append one explicit config file, of any name, read after every directory.
+    pub(crate) fn with_config_file(mut self, file: impl Into<PathBuf>) -> Self {
+        self.config_files.push(file.into());
+        self
+    }
+
     /// Override the default 30-second read deadline.
     pub(crate) fn with_read_timeout(mut self, timeout: Duration) -> Self {
         self.read_timeout = Some(timeout);
@@ -67,6 +74,7 @@ impl ConfigBuilderImpl {
             config_filename: self
                 .config_filename
                 .unwrap_or_else(|| crate::core::DEFAULT_CONFIG_FILENAME.to_string()),
+            config_files: self.config_files,
         }
         .build_loader_internal()?;
         Ok(SectionLoaderImpl {
@@ -123,5 +131,9 @@ impl ConfigBuilder for ConfigBuilderImpl {
 
     fn with_config_filename(self, filename: impl Into<String>) -> Self {
         ConfigBuilderImpl::with_config_filename(self, filename)
+    }
+
+    fn with_config_file(self, file: impl Into<PathBuf>) -> Self {
+        ConfigBuilderImpl::with_config_file(self, file)
     }
 }
