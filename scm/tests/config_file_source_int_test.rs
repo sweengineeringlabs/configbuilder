@@ -88,7 +88,8 @@ fn test_with_config_file_file_alone_is_the_only_source_of_a_named_application_ed
 
 /// @covers: with_config_file
 #[test]
-fn test_with_config_file_file_that_does_not_exist_is_not_found_error() {
+fn test_with_config_file_file_that_does_not_exist_is_an_io_error_and_not_nothing_configured_error()
+{
     let dir = must(tempfile::tempdir());
     write(dir.path(), "application.toml", "[s]\nvalue = \"dir\"\n");
     let missing = dir.path().join("missing.toml");
@@ -100,8 +101,8 @@ fn test_with_config_file_file_that_does_not_exist_is_not_found_error() {
     );
     let outcome: Result<Section, ConfigError> = loader.load_section("s");
     assert!(
-        matches!(outcome, Err(ConfigError::NotFound(_))),
-        "a file the caller named must exist, even when a directory has a value: {outcome:?}"
+        matches!(outcome, Err(ConfigError::Io(_))),
+        "a file the caller named must exist, even when a directory has a value, and is not 'nothing configured': {outcome:?}"
     );
 }
 
@@ -167,4 +168,20 @@ fn test_with_config_file_file_without_the_section_leaves_the_directories_value_e
     );
     let section: Section = must(loader.load_section("s"));
     assert_eq!(section.value, "dir");
+}
+
+/// @covers: with_config_file
+#[test]
+fn test_with_config_file_no_file_in_any_source_is_still_not_found_edge() {
+    let dir = must(tempfile::tempdir());
+    let loader = must(
+        ConfigLoaderFactory::create_config_builder()
+            .with_config_dir(dir.path())
+            .build_loader(),
+    );
+    let outcome: Result<Section, ConfigError> = loader.load_section("s");
+    assert!(
+        matches!(outcome, Err(ConfigError::NotFound(_))),
+        "nothing configured stays NotFound: {outcome:?}"
+    );
 }

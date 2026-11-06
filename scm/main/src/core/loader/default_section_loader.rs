@@ -169,7 +169,7 @@ impl DefaultSectionLoader {
         for (path, required) in self.sources() {
             if !path.exists() {
                 if required {
-                    return Err(ConfigError::NotFound(format!(
+                    return Err(ConfigError::Io(format!(
                         "{}: the config file does not exist",
                         path.display()
                     )));
@@ -250,7 +250,7 @@ impl LoaderOps for DefaultSectionLoader {
         for (path, required) in self.sources() {
             if !path.exists() {
                 if required {
-                    return Err(ConfigError::NotFound(format!(
+                    return Err(ConfigError::Io(format!(
                         "{}: the config file does not exist",
                         path.display()
                     )));
