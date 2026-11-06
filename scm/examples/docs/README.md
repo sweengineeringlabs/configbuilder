@@ -35,6 +35,7 @@ All chained from `ConfigLoaderFactory::create_config_builder()`.
 | `docs_with_version` | `with_version(version)` | Metadata only — no effect on resolution |
 | `docs_with_config_dir` | `with_config_dir(dir)` | Accumulates directories; later calls win on key conflicts |
 | `docs_with_config_filename` | `with_config_filename(name)` | Overrides the filename searched for (default `application.toml`) |
+| `docs_with_config_file` | `with_config_file(file)` | Adds one file of any name after the directories; it overrides them and must exist |
 | `docs_with_read_timeout` | `with_read_timeout(duration)` | Overrides the 30s default read deadline |
 
 Every example that depends on XDG/env-based resolution sets

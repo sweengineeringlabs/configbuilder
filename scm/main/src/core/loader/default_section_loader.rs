@@ -45,9 +45,21 @@ pub(crate) struct DefaultSectionLoader {
     /// Filename searched for in each configured directory. Defaults to
     /// [`DEFAULT_CONFIG_FILENAME`] (`application.toml`).
     pub(crate) config_filename: String,
+    /// Explicit config files, each of any name, read after every directory in the order added, so they override the directories. A file named here must exist.
+    pub(crate) config_files: Vec<PathBuf>,
 }
 
 impl DefaultSectionLoader {
+    /// The sources of the chain, lowest priority first: `<dir>/<config_filename>` for each directory (skipped when absent), then each explicit file (an error
+    /// when absent, because the caller named it).
+    fn sources(&self) -> Vec<(PathBuf, bool)> {
+        self.config_dirs
+            .iter()
+            .map(|dir| (dir.join(&self.config_filename), false))
+            .chain(self.config_files.iter().map(|file| (file.clone(), true)))
+            .collect()
+    }
+
     /// Read a file on a background thread, returning `ConfigError::Io` if the read
     /// does not complete within `timeout`.  The background thread is not cancelled
     /// (there is no portable cancel mechanism for in-flight OS I/O), but it is
@@ -154,9 +166,14 @@ impl DefaultSectionLoader {
         let mut merged = toml::Value::Table(toml::map::Map::new());
         let mut section_found = false;
 
-        for dir in &self.config_dirs {
-            let path = dir.join(&self.config_filename);
+        for (path, required) in self.sources() {
             if !path.exists() {
+                if required {
+                    return Err(ConfigError::Io(format!(
+                        "{}: the config file does not exist",
+                        path.display()
+                    )));
+                }
                 continue;
             }
             let meta = std::fs::metadata(&path)
@@ -207,6 +224,14 @@ impl Loader for DefaultSectionLoader {
                 )));
             }
         }
+        for file in &self.config_files {
+            if file.exists() && !file.is_file() {
+                return Err(ConfigError::Io(format!(
+                    "{}: the config file is not a file",
+                    file.display()
+                )));
+            }
+        }
         Ok(())
     }
 }
@@ -222,9 +247,14 @@ impl LoaderOps for DefaultSectionLoader {
         let mut any_file_found = false;
         let mut merged = toml::Value::Table(toml::map::Map::new());
 
-        for dir in &self.config_dirs {
-            let path = dir.join(&self.config_filename);
+        for (path, required) in self.sources() {
             if !path.exists() {
+                if required {
+                    return Err(ConfigError::Io(format!(
+                        "{}: the config file does not exist",
+                        path.display()
+                    )));
+                }
                 continue;
             }
             any_file_found = true;
@@ -251,7 +281,7 @@ impl LoaderOps for DefaultSectionLoader {
         if matches!(merged, toml::Value::Table(ref t) if t.is_empty()) {
             if !any_file_found {
                 return Err(ConfigError::NotFound(format!(
-                    "no {} found in any configured directory for section '{key}'",
+                    "no {} found in any configured directory or file for section '{key}'",
                     self.config_filename
                 )));
             }
@@ -435,6 +465,7 @@ mod tests {
             value_resolver: None,
             read_timeout: DEFAULT_READ_TIMEOUT,
             config_filename: DEFAULT_CONFIG_FILENAME.to_string(),
+            config_files: Vec::new(),
         }
     }
 
@@ -511,6 +542,7 @@ mod tests {
             value_resolver: None,
             read_timeout: DEFAULT_READ_TIMEOUT,
             config_filename: DEFAULT_CONFIG_FILENAME.to_string(),
+            config_files: Vec::new(),
         };
         let sec: DefaultSectionLoaderSection = must(loader.load_section("s"));
         assert_eq!(sec.value, "high");
@@ -528,6 +560,7 @@ mod tests {
             value_resolver: None,
             read_timeout: DEFAULT_READ_TIMEOUT,
             config_filename: DEFAULT_CONFIG_FILENAME.to_string(),
+            config_files: Vec::new(),
         };
         let sec: DefaultSectionLoaderSection = must(loader.load_section("s"));
         assert_eq!(sec.value, "hi");
@@ -570,6 +603,7 @@ mod tests {
             value_resolver: None,
             read_timeout: DEFAULT_READ_TIMEOUT,
             config_filename: DEFAULT_CONFIG_FILENAME.to_string(),
+            config_files: Vec::new(),
         };
         let srv: DefaultSectionLoaderServer = must(loader.load_section("s"));
         assert_eq!(
@@ -700,6 +734,7 @@ mod tests {
             value_resolver: None,
             read_timeout: DEFAULT_READ_TIMEOUT,
             config_filename: DEFAULT_CONFIG_FILENAME.to_string(),
+            config_files: Vec::new(),
         };
         let state: FeatureState<DefaultSectionLoaderSection> =
             must(loader.load_optional_section("feat"));
@@ -725,6 +760,7 @@ mod tests {
             value_resolver: None,
             read_timeout: DEFAULT_READ_TIMEOUT,
             config_filename: DEFAULT_CONFIG_FILENAME.to_string(),
+            config_files: Vec::new(),
         };
         let state: FeatureState<DefaultSectionLoaderSection> =
             must(loader.load_optional_section("feat"));
@@ -927,6 +963,7 @@ mod tests {
             value_resolver: None,
             read_timeout: DEFAULT_READ_TIMEOUT,
             config_filename: DEFAULT_CONFIG_FILENAME.to_string(),
+            config_files: Vec::new(),
         };
         assert!(matches!(loader.validate(), Ok(())));
     }
@@ -940,6 +977,7 @@ mod tests {
             value_resolver: None,
             read_timeout: DEFAULT_READ_TIMEOUT,
             config_filename: DEFAULT_CONFIG_FILENAME.to_string(),
+            config_files: Vec::new(),
         };
         assert_eq!(loader.config_dirs, vec![dir.path().to_path_buf()]);
         assert!(loader.validate().is_ok());
@@ -956,6 +994,7 @@ mod tests {
             value_resolver: None,
             read_timeout: DEFAULT_READ_TIMEOUT,
             config_filename: DEFAULT_CONFIG_FILENAME.to_string(),
+            config_files: Vec::new(),
         };
         let err = must_err(loader.validate());
         assert!(matches!(err, ConfigError::Io(_)));

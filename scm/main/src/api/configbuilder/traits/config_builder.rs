@@ -55,4 +55,11 @@ pub trait ConfigBuilder: Sized {
     ///
     /// Defaults to `application.toml` when not called.
     fn with_config_filename(self, filename: impl Into<String>) -> Self;
+
+    /// Append one explicit config file, of any name, to the sources of the loader.
+    ///
+    /// Files are read after every directory, in the order added, so they override the directories (and the earlier files) on key conflicts. Unlike a directory,
+    /// a file named here must exist: the loader fails with `ConfigError::Io` when it does not, because the caller named it; `ConfigError::NotFound` stays for a section that is in no source, which a library may read as nothing configured. It is read with the same limits as
+    /// a directory's file (size, timeout, substitution) and its filename is its own, not the loader's `config_filename`.
+    fn with_config_file(self, file: impl Into<PathBuf>) -> Self;
 }
