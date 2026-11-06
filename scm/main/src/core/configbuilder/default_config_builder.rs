@@ -16,6 +16,7 @@ pub(crate) struct DefaultConfigBuilder {
     pub(crate) config_dirs: Vec<PathBuf>,
     pub(crate) read_timeout: Duration,
     pub(crate) config_filename: String,
+    pub(crate) config_files: Vec<PathBuf>,
 }
 
 impl DefaultConfigBuilder {
@@ -42,6 +43,7 @@ impl DefaultConfigBuilder {
                 value_resolver: None,
                 read_timeout: self.read_timeout,
                 config_filename: self.config_filename,
+                config_files: self.config_files,
             };
             loader.validate()?;
             return Ok(loader);
@@ -72,6 +74,7 @@ impl DefaultConfigBuilder {
                 value_resolver: None,
                 read_timeout: self.read_timeout,
                 config_filename: self.config_filename,
+                config_files: self.config_files,
             };
             loader.validate()?;
             return Ok(loader);
@@ -91,6 +94,7 @@ impl DefaultConfigBuilder {
             value_resolver: None,
             read_timeout: self.read_timeout,
             config_filename: self.config_filename,
+            config_files: self.config_files,
         };
         loader.validate()?;
         Ok(loader)
@@ -123,6 +127,11 @@ impl ConfigBuilder for DefaultConfigBuilder {
 
     fn with_config_filename(mut self, filename: impl Into<String>) -> Self {
         self.config_filename = filename.into();
+        self
+    }
+
+    fn with_config_file(mut self, file: impl Into<PathBuf>) -> Self {
+        self.config_files.push(file.into());
         self
     }
 }
@@ -190,6 +199,7 @@ mod tests {
             config_dirs: Vec::new(),
             read_timeout: Duration::from_secs(30),
             config_filename: crate::core::DEFAULT_CONFIG_FILENAME.to_string(),
+            config_files: Vec::new(),
         }
     }
 
@@ -327,6 +337,7 @@ mod tests {
             config_dirs: vec![dir.path().to_path_buf()],
             read_timeout: Duration::from_secs(30),
             config_filename: crate::core::DEFAULT_CONFIG_FILENAME.to_string(),
+            config_files: Vec::new(),
         };
         let loader = must(builder.build_loader_internal());
         assert_eq!(loader.config_dirs, vec![dir.path().to_path_buf()]);

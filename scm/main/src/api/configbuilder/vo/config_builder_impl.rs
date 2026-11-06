@@ -49,4 +49,5 @@ pub struct ConfigBuilderImpl {
     pub(crate) config_dirs: Vec<PathBuf>,
     pub(crate) read_timeout: Option<Duration>,
     pub(crate) config_filename: Option<String>,
+    pub(crate) config_files: Vec<PathBuf>,
 }

@@ -45,6 +45,7 @@ pub struct DefaultSubstitutionConfigBuilder {
     pub(crate) config_dirs: Vec<PathBuf>,
     pub(crate) policy: Box<dyn SubstitutionPolicy>,
     pub(crate) config_filename: String,
+    pub(crate) config_files: Vec<PathBuf>,
 }
 
 impl DefaultSubstitutionConfigBuilder {
@@ -82,6 +83,12 @@ impl DefaultSubstitutionConfigBuilder {
         self
     }
 
+    /// Append one explicit config file, of any name, read after every directory.
+    pub(crate) fn with_config_file(mut self, file: impl Into<PathBuf>) -> Self {
+        self.config_files.push(file.into());
+        self
+    }
+
     /// Consume the builder and return a ready-to-use section loader with substitution support.
     pub(crate) fn build_loader(self) -> Result<SectionLoaderImpl, ConfigError> {
         let mut core = crate::core::DefaultConfigBuilder {
@@ -90,6 +97,7 @@ impl DefaultSubstitutionConfigBuilder {
             config_dirs: self.config_dirs,
             read_timeout: crate::core::loader::DEFAULT_READ_TIMEOUT,
             config_filename: self.config_filename,
+            config_files: self.config_files,
         }
         .build_loader_internal()?;
         core.substitution_policy = Some(self.policy);
@@ -132,6 +140,10 @@ impl ConfigBuilder for DefaultSubstitutionConfigBuilder {
     fn with_config_filename(self, filename: impl Into<String>) -> Self {
         DefaultSubstitutionConfigBuilder::with_config_filename(self, filename)
     }
+
+    fn with_config_file(self, file: impl Into<std::path::PathBuf>) -> Self {
+        DefaultSubstitutionConfigBuilder::with_config_file(self, file)
+    }
 }
 
 impl From<DefaultSubstitutionConfigBuilder> for ConfigBuilderImpl {
@@ -142,6 +154,7 @@ impl From<DefaultSubstitutionConfigBuilder> for ConfigBuilderImpl {
             config_dirs: value.config_dirs,
             read_timeout: None,
             config_filename: Some(value.config_filename),
+            config_files: value.config_files,
         }
     }
 }
