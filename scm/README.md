@@ -12,7 +12,7 @@ All consumer-facing behavior is reached through `ConfigLoaderFactory` — the cr
 
 ```toml
 [dependencies]
-configbuilder = "0.8"
+configbuilder = "0.9"
 ```
 
 ## Features
